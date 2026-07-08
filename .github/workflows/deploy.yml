@@ -13,33 +13,10 @@ env:
 
 jobs:
   # ============================================================
-  # Job 1: Backend Tests
+  # Job 1: Backend Tests (uses in-memory SQLite via conftest.py)
   # ============================================================
   backend-test:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: ethara
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout Code
@@ -59,7 +36,7 @@ jobs:
 
       - name: Run Backend Tests
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ethara
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET: testsecretkey123forcicd
           ENVIRONMENT: test
@@ -90,7 +67,7 @@ jobs:
 
       - name: Build Next.js (production)
         env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'https://ethara-backend.onrender.com/api/v1' }}
+          NEXT_PUBLIC_API_URL: https://ethara-backend.onrender.com/api/v1
           BACKEND_URL: http://localhost:8000
         run: |
           cd frontend
@@ -130,7 +107,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./backend
-          file: ./infrastructure/Dockerfile.backend
+          file: ./backend/Dockerfile
           push: true
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
@@ -142,7 +119,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          file: ./infrastructure/Dockerfile.frontend
+          file: ./frontend/Dockerfile
           push: true
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
@@ -152,11 +129,15 @@ jobs:
 
   # ============================================================
   # Job 4: Deploy Frontend to Vercel
+  # Only runs if VERCEL_TOKEN secret is configured
   # ============================================================
   deploy-frontend-vercel:
     needs: [frontend-build]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      secrets.VERCEL_TOKEN != ''
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -172,14 +153,24 @@ jobs:
 
   # ============================================================
   # Job 5: Trigger Backend Redeploy on Render
+  # Only runs if RENDER_DEPLOY_HOOK_URL secret is configured
   # ============================================================
   deploy-backend-render:
     needs: [docker-build-and-push]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: |
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      secrets.RENDER_DEPLOY_HOOK_URL != ''
     steps:
       - name: Trigger Render Deploy Webhook
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" | \
-            grep -q "^2" && echo "Render deploy triggered ✓" || echo "Render webhook failed"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
+          echo "Render webhook response: $HTTP_CODE"
+          if [[ "$HTTP_CODE" == 2* ]]; then
+            echo "Render deploy triggered ✓"
+          else
+            echo "Warning: Render webhook returned $HTTP_CODE — check RENDER_DEPLOY_HOOK_URL secret"
+            exit 0
+          fi
