@@ -1,0 +1,12 @@
+.venv
+.venv_wsl
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.git
+.gitignore
+.env
+db_data
+redis_data

@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+}
+
+@layer base {
+  :root {
+    --background: #030712;
+    --foreground: #f9fafb;
+    --card: #111827;
+    --card-foreground: #f9fafb;
+    --border: #1f2937;
+    --muted: #1f2937;
+    --muted-foreground: #9ca3af;
+  }
+
+  .light-mode {
+    --background: #f9fafb;
+    --foreground: #111827;
+    --card: #ffffff;
+    --card-foreground: #111827;
+    --border: #e5e7eb;
+    --muted: #f3f4f6;
+    --muted-foreground: #6b7280;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.light-mode .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+}
+
+/* Force slate color class overrides in light mode */
+.light-mode .text-slate-100,
+.light-mode .text-slate-200,
+.light-mode .text-slate-300,
+.light-mode .text-slate-100\/90,
+.light-mode .text-slate-200\/90,
+.light-mode .text-white {
+  color: #111827 !important;
+}
+
+.light-mode .text-slate-400,
+.light-mode .text-slate-500 {
+  color: #4b5563 !important;
+}
+
+.light-mode .text-slate-600 {
+  color: #6b7280 !important;
+}
+
+.light-mode .bg-slate-950,
+.light-mode .bg-slate-950\/40,
+.light-mode .bg-slate-950\/60,
+.light-mode .bg-slate-900\/50,
+.light-mode .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+.light-mode .bg-slate-900\/10 {
+  background-color: #f3f4f6 !important;
+}
+
+.light-mode .border-slate-900,
+.light-mode .border-slate-800 {
+  border-color: #e5e7eb !important;
+}
+
+.light-mode .divide-slate-900 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e5e7eb !important;
+}
+
+/* Inputs, Select fields, and Textareas */
+.light-mode input,
+.light-mode select,
+.light-mode textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: #e5e7eb !important;
+}
+
+.light-mode input::placeholder,
+.light-mode textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Chart light mode styles */
+.light-mode .recharts-cartesian-grid line {
+  stroke: #e5e7eb !important;
+}
+.light-mode .recharts-text {
+  fill: #4b5563 !important;
+}
+
+/* Premium Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.light-mode ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}

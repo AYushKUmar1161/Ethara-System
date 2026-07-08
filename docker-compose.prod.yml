@@ -1,0 +1,86 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ethara-prod-db
+    restart: always
+    environment:
+      POSTGRES_DB: ethara
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?err_must_set_POSTGRES_PASSWORD}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ethara"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ethara-prod-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redispass}
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispass}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../infrastructure/Dockerfile.backend
+    container_name: ethara-prod-backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/ethara
+      - REDIS_URL=redis://default:${REDIS_PASSWORD:-redispass}@redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:?err_must_set_JWT_SECRET}
+      - ENVIRONMENT=production
+      - PORT=8000
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS:-https://ethara.vercel.app}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infrastructure/Dockerfile.frontend
+    container_name: ethara-prod-frontend
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://localhost/api/v1}
+      - BACKEND_URL=http://backend:8000
+      - PORT=3000
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: ethara-prod-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:

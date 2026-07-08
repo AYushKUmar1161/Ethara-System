@@ -1,0 +1,48 @@
+# ============================================================
+# Root .gitignore for Ethara Monorepo
+# ============================================================
+
+# Environment secrets — NEVER commit these
+.env
+.env.*
+!.env.*.example
+!.env.production.example
+
+# SSL Certificates (generated locally, never commit private keys)
+infrastructure/ssl/
+*.pem
+*.key
+*.crt
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.venv/
+.venv_wsl/
+*.egg-info/
+dist/
+build/
+
+# Node artifacts
+node_modules/
+.next/
+out/
+.vercel/
+npm-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Docker volumes (local dev data)
+postgres_data/
+redis_data/
