@@ -3,10 +3,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm ci --legacy-peer-deps",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@ethara_next_public_api_url",
-    "BACKEND_URL": "@ethara_backend_url"
-  },
   "headers": [
     {
       "source": "/(.*)",
