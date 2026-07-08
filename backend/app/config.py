@@ -23,9 +23,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # CORS: Can be overridden by BACKEND_CORS_ORIGINS env var (comma-separated)
-    # Production example: "https://ethara.vercel.app,https://ethara-frontend.onrender.com"
-    BACKEND_CORS_ORIGINS: List[str] = [
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://localhost:8000",
         "https://ethara.vercel.app",
